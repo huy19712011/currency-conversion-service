@@ -25,9 +25,11 @@ class RestClientConfiguration {
 public class CurrencyConversionController {
 
     private final RestClient restClient;
+    private CurrencyExchangeProxy proxy;
 
-    public CurrencyConversionController(RestClient restClient) {
+    public CurrencyConversionController(RestClient restClient, CurrencyExchangeProxy proxy) {
         this.restClient = restClient;
+        this.proxy = proxy;
     }
 
     @GetMapping("/currency-conversion/from/{from}/to/{to}/quantity/{quantity}")
@@ -52,6 +54,23 @@ public class CurrencyConversionController {
                 currencyConversion.getConversionMultiple(),
                 quantity.multiply(currencyConversion.getConversionMultiple()),
                 currencyConversion.getEnvironment() + " " + "rest client");
+
+    }
+
+    @GetMapping("/currency-conversion-feign/from/{from}/to/{to}/quantity/{quantity}")
+    public CurrencyConversion calculateCurrencyConversionFeign(
+            @PathVariable String from,
+            @PathVariable String to,
+            @PathVariable BigDecimal quantity
+    ) {
+
+        CurrencyConversion currencyConversion = proxy.retrieveExchangeValue(from, to);
+
+        return new CurrencyConversion(currencyConversion.getId(),
+                from, to, quantity,
+                currencyConversion.getConversionMultiple(),
+                quantity.multiply(currencyConversion.getConversionMultiple()),
+                currencyConversion.getEnvironment() + " " + "feign");
 
     }
 }
